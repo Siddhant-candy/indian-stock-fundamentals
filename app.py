@@ -86,11 +86,7 @@ if st.button("Fetch fundamentals", type="primary"):
             st.success(f"Successfully fetched {len(results)} stocks.")
 
             st.subheader("Fundamentals")
-            st.dataframe(
-                df,
-                use_container_width=True,
-                hide_index=True
-            )
+            st.table(df)
 
             st.download_button(
                 label="Download CSV",
