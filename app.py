@@ -2,6 +2,25 @@
 import streamlit as st
 import pandas as pd
 from openscreener import Stock
+import subprocess
+import sys
+
+
+
+@st.cache_resource
+def install_chromium():
+    result = subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Chromium installation failed: {result.stderr}"
+        )
+
+
 
 st.set_page_config(
     page_title="Indian Stock Fundamentals",
@@ -30,6 +49,9 @@ if st.button("Fetch fundamentals", type="primary"):
     if not symbols:
         st.warning("Please enter at least one stock symbol.")
     else:
+        with st.spinner("Preparing Chromium browser..."):
+            install_chromium()
+
         progress = st.progress(0)
 
         for i, symbol in enumerate(symbols):
