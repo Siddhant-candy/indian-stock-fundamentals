@@ -30,8 +30,120 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📈 Indian Stock Fundamentals")
-st.write("Fetch stock fundamentals from Screener.in.")
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(ellipse at 85% 0%, rgba(20, 125, 116, 0.10), transparent 32%),
+            linear-gradient(rgba(24, 54, 78, 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(24, 54, 78, 0.035) 1px, transparent 1px),
+            #f4f7fa;
+        background-size: auto, 32px 32px, 32px 32px, auto;
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    .block-container {
+        max-width: 1380px;
+        padding-top: 2.4rem;
+        padding-bottom: 3rem;
+    }
+
+    .hero {
+        padding: 1.8rem 2rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 18px;
+        color: white;
+        background: linear-gradient(115deg, #142d43, #1b4a5a 72%, #176b66);
+        box-shadow: 0 12px 30px rgba(24, 54, 78, 0.14);
+    }
+
+    .hero-kicker {
+        margin: 0 0 0.45rem 0;
+        color: #a8d8cd;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .hero h1 {
+        margin: 0;
+        color: white;
+        font-size: 2rem;
+        line-height: 1.2;
+    }
+
+    .hero p {
+        margin: 0.55rem 0 0 0;
+        color: #d6e4e8;
+        font-size: 1rem;
+    }
+
+    [data-testid="stTextArea"] textarea {
+        border: 1px solid #d5dee5;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    [data-testid="stTextArea"] textarea:focus {
+        border-color: #16877b;
+        box-shadow: 0 0 0 1px #16877b;
+    }
+
+    .stButton button, .stDownloadButton button {
+        min-height: 2.75rem;
+        border-radius: 9px;
+        font-weight: 650;
+    }
+
+    .stButton button[kind="primary"] {
+        border: 0;
+        color: white;
+        background: #147d74;
+    }
+
+    .stButton button[kind="primary"]:hover {
+        border: 0;
+        color: white;
+        background: #10665f;
+    }
+
+    [data-testid="stTable"] {
+        overflow: auto;
+        border: 1px solid #dce4e9;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 6px 18px rgba(24, 54, 78, 0.07);
+    }
+
+    [data-testid="stTable"] table {
+        border-collapse: collapse;
+    }
+
+    [data-testid="stTable"] thead tr th {
+        color: #18364e;
+        background: #eaf1f4;
+        font-weight: 700;
+    }
+
+    [data-testid="stTable"] tbody tr:nth-child(even) {
+        background: #f7fafb;
+    }
+    </style>
+
+    <section class="hero">
+        <p class="hero-kicker">Market research dashboard</p>
+        <h1>Indian Stock Fundamentals</h1>
+        <p>Compare company fundamentals and price trends for NSE-listed stocks.</p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
 
 symbols_input = st.text_area(
     "Enter NSE symbols (one per line)",
