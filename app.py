@@ -88,6 +88,14 @@ st.markdown(
         border: 1px solid #d5dee5;
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.92);
+        color: #18364e !important;
+        -webkit-text-fill-color: #18364e;
+        caret-color: #147d74;
+    }
+
+    [data-testid="stTextArea"] textarea::placeholder {
+        color: #6b7d89;
+        -webkit-text-fill-color: #6b7d89;
     }
 
     [data-testid="stTextArea"] textarea:focus {
