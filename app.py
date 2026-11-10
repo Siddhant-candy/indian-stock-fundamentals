@@ -98,6 +98,10 @@ st.markdown(
         -webkit-text-fill-color: #6b7d89;
     }
 
+    [data-testid="stTextArea"] [data-testid="stWidgetLabel"] {
+        color: #18364e !important;
+    }
+
     [data-testid="stTextArea"] textarea:focus {
         border-color: #16877b;
         box-shadow: 0 0 0 1px #16877b;
