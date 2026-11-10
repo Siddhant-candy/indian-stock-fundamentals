@@ -2,8 +2,10 @@
 import streamlit as st
 import pandas as pd
 from openscreener import Stock
+import yfinance as yf
 import subprocess
 import sys
+import math
 
 
 
@@ -36,13 +38,108 @@ symbols_input = st.text_area(
     value="TCS\nINFY\nHDFCBANK"
 )
 
+def get_industry_pe(peers_data):
+    """Read the peer-group median P/E row from openscreener's peers response."""
+    if not isinstance(peers_data, dict):
+        return None
+    companies = peers_data.get("companies", [])
+    if not isinstance(companies, list):
+        companies = []
+
+    for company in companies:
+        name = str(company.get("company", "")).lower()
+        if name.startswith("median:"):
+            return company.get("p_e")
+
+    # Use the package's median object if it contains a P/E.
+    median = peers_data.get("median")
+    if isinstance(median, dict):
+        return median.get("p_e")
+
+    return None
+
+def calculate_rsi(closes, period=14):
+    """Wilder RSI."""
+    changes = closes.diff()
+    gains = changes.clip(lower=0)
+    losses = -changes.clip(upper=0)
+
+    avg_gain = gains.ewm(
+        alpha=1 / period, min_periods=period, adjust=False
+    ).mean()
+    avg_loss = losses.ewm(
+        alpha=1 / period, min_periods=period, adjust=False
+    ).mean()
+
+    relative_strength = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + relative_strength))
+
+    # No losses means RSI is 100; no gains and no losses means neutral.
+    rsi = rsi.mask((avg_loss == 0) & (avg_gain > 0), 100)
+    rsi = rsi.mask((avg_loss == 0) & (avg_gain == 0), 50)
+
+    return rsi.iloc[-1] if not rsi.empty else None
+
+
+def get_price_metrics(symbol):
+    """Return available Yahoo Finance metrics; missing metrics stay empty."""
+    symbol = symbol.upper()
+    yahoo_symbol = f"{symbol}.NS"
+    metrics = {"RSI (14)": None, "4 DMA": None, "11 DMA": None,
+               "18 DMA": None, "50 DMA": None, "200 DMA": None,
+               "52W High": None, "52W Low": None, "All-time High": None}
+    try:
+        history = yf.Ticker(yahoo_symbol).history(
+            period="max", interval="1d", auto_adjust=True,
+        )
+        if history is None or history.empty or "Close" not in history:
+            return metrics
+
+        closes = history["Close"].dropna()
+        if not closes.empty:
+            metrics["RSI (14)"] = calculate_rsi(closes)
+            for period, label in ((4, "4 DMA"), (11, "11 DMA"),
+                                  (18, "18 DMA"), (50, "50 DMA"),
+                                  (200, "200 DMA")):
+                if len(closes) >= period:
+                    metrics[label] = closes.tail(period).mean()
+
+        if "High" in history:
+            highs = history["High"].dropna()
+            if len(highs) >= 252:
+                metrics["52W High"] = highs.tail(252).max()
+            if not highs.empty:
+                metrics["All-time High"] = highs.max()
+        if "Low" in history:
+            lows = history["Low"].dropna()
+            if len(lows) >= 252:
+                metrics["52W Low"] = lows.tail(252).min()
+    except Exception:
+        # Price data is optional; preserve other sources for this ticker.
+        pass
+    return metrics
+
+
+def display_value(value):
+    """Use a readable marker for missing or non-finite values."""
+    if value is None:
+        return "NA"
+    try:
+        if pd.isna(value):
+            return "NA"
+        if isinstance(value, (int, float)) and not math.isfinite(value):
+            return "NA"
+    except (TypeError, ValueError):
+        pass
+    return value
+
 if st.button("Fetch fundamentals", type="primary"):
 
-    symbols = [
+    symbols = list(dict.fromkeys(
         s.strip().upper()
         for s in symbols_input.splitlines()
         if s.strip()
-    ]
+    ))
 
     results = []
 
@@ -50,33 +147,47 @@ if st.button("Fetch fundamentals", type="primary"):
         st.warning("Please enter at least one stock symbol.")
     else:
         with st.spinner("Preparing Chromium browser..."):
-            install_chromium()
+            try:
+                install_chromium()
+            except Exception as e:
+                st.warning(f"Chromium setup failed; Screener data may be unavailable: {e}")
 
         progress = st.progress(0)
 
         for i, symbol in enumerate(symbols):
-
             try:
                 with st.spinner(f"Fetching {symbol}..."):
-                    stock = Stock(symbol)
-                    data = stock.summary()
-                    ratios = data.get("ratios", {})
+                    row = {"Symbol": symbol, "Name": None, "CMP Rs.": None,
+                           "Mar Cap Rs.Cr.": None, "P/E": None,
+                           "Industry P/E": None, **get_price_metrics(symbol)}
 
-                    row = {
-                        "Symbol": data.get("nse_symbol", symbol),
-                        "Name": data.get("company_name"),
-                        "CMP Rs.": ratios.get("current_price"),
-                        "Mar Cap Rs.Cr.": ratios.get("market_cap"),
-                        "Div Yld %": ratios.get("dividend_yield"),
-                        "P/E": ratios.get("stock_p_e"),
-                        "ROE %": ratios.get("roe_percent"),
-                        "ROCE %": ratios.get("roce_percent"),
-                    }
+                    try:
+                        stock = Stock(symbol)
+                        data = stock.summary() or {}
+                        if not isinstance(data, dict):
+                            data = {}
+                        ratios = data.get("ratios") or {}
+                        if not isinstance(ratios, dict):
+                            ratios = {}
+                        row.update({
+                            "Symbol": data.get("nse_symbol") or symbol,
+                            "Name": data.get("company_name"),
+                            "CMP Rs.": ratios.get("current_price"),
+                            "Mar Cap Rs.Cr.": ratios.get("market_cap"),
+                            "P/E": ratios.get("stock_p_e"),
+                        })
+                        try:
+                            row["Industry P/E"] = get_industry_pe(stock.peers())
+                        except Exception:
+                            pass
+                    except Exception:
+                        # Screener can fail for individual symbols; keep the row.
+                        pass
 
-                    results.append(row)
+                    results.append({key: display_value(value) for key, value in row.items()})
 
             except Exception as e:
-                st.warning(f"Could not fetch {symbol}: {e}")
+                st.warning(f"Some data for {symbol} could not be fetched: {e}. Missing fields are shown as NA.")
 
             progress.progress((i + 1) / len(symbols))
 
