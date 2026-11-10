@@ -35,11 +35,9 @@ st.markdown(
     <style>
     .stApp {
         background:
-            radial-gradient(ellipse at 85% 0%, rgba(20, 125, 116, 0.10), transparent 32%),
-            linear-gradient(rgba(24, 54, 78, 0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(24, 54, 78, 0.035) 1px, transparent 1px),
+            radial-gradient(ellipse at 88% 0%, rgba(20, 125, 116, 0.08), transparent 36%),
             #f4f7fa;
-        background-size: auto, 32px 32px, 32px 32px, auto;
+        color: #18364e;
     }
 
     [data-testid="stHeader"] {
@@ -137,6 +135,12 @@ st.markdown(
         border-collapse: collapse;
     }
 
+    [data-testid="stTable"] tbody td {
+        color: #18364e !important;
+        background: #ffffff;
+        white-space: nowrap;
+    }
+
     [data-testid="stTable"] thead tr th {
         color: #18364e;
         background: #eaf1f4;
@@ -145,6 +149,25 @@ st.markdown(
 
     [data-testid="stTable"] tbody tr:nth-child(even) {
         background: #f7fafb;
+    }
+
+    [data-testid="stTable"] tbody tr:nth-child(even) td {
+        background: #f7fafb;
+    }
+
+    [data-testid="stMarkdownContainer"] h2 {
+        color: #18364e;
+    }
+
+    [data-testid="stAlert"] {
+        color: #18364e;
+        border-radius: 10px;
+    }
+
+    .stDownloadButton button {
+        border: 1px solid #d5dee5;
+        color: #18364e;
+        background: white;
     }
     </style>
 
