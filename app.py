@@ -7,6 +7,9 @@ import subprocess
 import sys
 import math
 
+from io import BytesIO
+
+buffer = BytesIO()
 
 
 @st.cache_resource
@@ -351,6 +354,14 @@ if st.button("Fetch fundamentals", type="primary"):
                 data=df.to_csv(index=False).encode("utf-8-sig"),
                 file_name="stock_fundamentals.csv",
                 mime="text/csv"
+            )
+            df.to_excel(buffer, index=False, engine="openpyxl")
+
+            st.download_button(
+                label="Download Excel",
+                data=buffer.getvalue(),
+                file_name="stock_fundamentals.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         else:
             st.error("No stock data was fetched.")
