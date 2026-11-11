@@ -3,3 +3,4 @@ pandas
 openscreener
 playwright
 yfinance
+openpyxl
